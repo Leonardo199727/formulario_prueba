@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, addDoc, query, getDocs } from './firebaseConfig';
+import { db, collection, addDoc, query, getDocs, onSnapshot } from './firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import './Formulario.css';
 
@@ -18,6 +18,7 @@ const Formulario = () => {
 
   const navigate = useNavigate();
 
+  // Cargar materiales
   useEffect(() => {
     const fetchMateriales = async () => {
       try {
@@ -34,25 +35,20 @@ const Formulario = () => {
     fetchMateriales();
   }, []);
 
+  // Cargar profesores
   useEffect(() => {
-    const fetchProfesores = async () => {
-      try {
-        const profesoresRef = collection(db, 'profesores');
-        const q = query(profesoresRef);
-        const querySnapshot = await getDocs(q);
-        const profesorData = querySnapshot.docs.map(doc => ({
-          nombre: doc.data().nombre,
-          carrera: doc.data().carrera
-        }));
-        setProfesores(profesorData);
-      } catch (error) {
-        console.error('Error al cargar los profesores: ', error);
-      }
-    };
+    const unsubscribe = onSnapshot(collection(db, 'profesores'), (snapshot) => {
+      const profesorData = snapshot.docs.map(doc => ({
+        nombre: doc.data().nombre,
+        carrera: doc.data().carrera
+      }));
+      setProfesores(profesorData);
+    });
 
-    fetchProfesores();
+    return () => unsubscribe(); // Detener la escucha cuando el componente se desmonte
   }, []);
 
+  // Cargar áreas
   useEffect(() => {
     const fetchAreas = async () => {
       try {
@@ -90,7 +86,7 @@ const Formulario = () => {
   };
 
   const handleMaterialSeleccionado = (id, value) => {
-    if (value) {
+    if (value && !materialSeleccionado.includes(value)) {
       setMaterialSeleccionado(prev => [...prev, value]);
       handleMaterialChange(id, value);
       handleAgregarCampo();
