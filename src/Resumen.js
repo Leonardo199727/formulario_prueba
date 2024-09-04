@@ -1,21 +1,51 @@
-// src/Resumen.js
 import React from 'react';
 import { useLocation } from 'react-router-dom';
+import './Resumen.css';
 
 const Resumen = () => {
-  const location = useLocation();
-  const { nombre, matricula, carrera, profesor, materiales, area, cantidadIntegrantes } = location.state || {};
+  const { state } = useLocation();
 
   return (
-    <div>
-      <h1>Resumen del Formulario</h1>
-      <p><strong>Nombre Completo:</strong> {nombre}</p>
-      <p><strong>Matrícula:</strong> {matricula}</p>
-      <p><strong>Carrera:</strong> {carrera}</p>
-      <p><strong>Profesor:</strong> {profesor}</p>
-      <p><strong>Materiales Requeridos:</strong> {materiales.join(', ')}</p>
-      <p><strong>Área Requerida:</strong> {area}</p>
-      <p><strong>Cantidad de Integrantes:</strong> {cantidadIntegrantes}</p>
+    <div className="resumen-container">
+      <h2>Resumen de la Solicitud</h2>
+      <table className="resumen-tabla">
+        <tbody>
+          <tr>
+            <th>Nombre Completo:</th>
+            <td>{state.nombre}</td>
+          </tr>
+          <tr>
+            <th>Matrícula:</th>
+            <td>{state.matricula}</td>
+          </tr>
+          <tr>
+            <th>Carrera:</th>
+            <td>{state.carrera}</td>
+          </tr>
+          <tr>
+            <th>Profesor:</th>
+            <td>{state.profesor}</td>
+          </tr>
+          <tr>
+            <th>Materiales Requeridos:</th>
+            <td>
+              <ul>
+                {state.materiales.map((material, index) => (
+                  <li key={index}>{material}</li>
+                ))}
+              </ul>
+            </td>
+          </tr>
+          <tr>
+            <th>Área Requerida:</th>
+            <td>{state.area}</td>
+          </tr>
+          <tr>
+            <th>Cantidad de Integrantes:</th>
+            <td>{state.cantidadIntegrantes}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   );
 };

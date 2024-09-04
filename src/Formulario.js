@@ -1,7 +1,6 @@
-// src/Formulario.js
 import React, { useState, useEffect } from 'react';
 import { db, collection, addDoc, query, getDocs } from './firebaseConfig';
-import { useNavigate } from 'react-router-dom'; // Importa useNavigate para la redirección
+import { useNavigate } from 'react-router-dom';
 import './Formulario.css';
 
 const Formulario = () => {
@@ -17,7 +16,7 @@ const Formulario = () => {
   const [cantidadIntegrantes, setCantidadIntegrantes] = useState('');
   const [profesores, setProfesores] = useState([]);
 
-  const navigate = useNavigate(); // Inicializa useNavigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchMateriales = async () => {
@@ -73,7 +72,7 @@ const Formulario = () => {
   const handleCarreraChange = (e) => {
     const selectedCarrera = e.target.value;
     setCarrera(selectedCarrera);
-    setProfesor(''); // Reinicia el profesor seleccionado cuando se cambia la carrera
+    setProfesor('');
   };
 
   const profesoresFiltrados = profesores.filter(prof => prof.carrera === carrera);
@@ -85,7 +84,6 @@ const Formulario = () => {
   };
 
   const handleAgregarCampo = () => {
-    // Añade un nuevo campo solo si el anterior ha sido seleccionado
     if (buscadores[buscadores.length - 1].valor) {
       setBuscadores([...buscadores, { id: Date.now(), valor: '' }]);
     }
@@ -94,23 +92,38 @@ const Formulario = () => {
   const handleMaterialSeleccionado = (id, value) => {
     if (value) {
       setMaterialSeleccionado(prev => [...prev, value]);
-      handleMaterialChange(id, value); // Marca el campo como seleccionado
-      handleAgregarCampo(); // Añade un nuevo campo solo si el actual tiene un valor
+      handleMaterialChange(id, value);
+      handleAgregarCampo();
     }
   };
 
   const obtenerSugerencias = (valor) => {
-    // Filtra las sugerencias solo si hay 3 o más letras
     if (valor.length < 3) {
       return [];
     }
     return materiales.filter(mat => mat.toLowerCase().includes(valor.toLowerCase()));
   };
 
+  const obtenerSiguienteID = async () => {
+    try {
+      const solicitudesRef = collection(db, 'solicitudes');
+      const q = query(solicitudesRef);
+      const querySnapshot = await getDocs(q);
+      const ids = querySnapshot.docs.map(doc => doc.data().ID_solicitud);
+      const maxId = ids.length ? Math.max(...ids) : 0;
+      return maxId + 1;
+    } catch (error) {
+      console.error('Error al obtener el siguiente ID: ', error);
+      return 1; // Valor por defecto si ocurre un error
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'formularios'), {
+      const siguienteID = await obtenerSiguienteID();
+      await addDoc(collection(db, 'solicitudes'), {
+        ID_solicitud: siguienteID,
         nombre,
         matricula,
         carrera,
@@ -119,7 +132,6 @@ const Formulario = () => {
         area,
         cantidadIntegrantes
       });
-      // Redirige a la página de resumen con los datos del formulario
       navigate('/resumen', { state: { nombre, matricula, carrera, profesor, materiales: materialSeleccionado, area, cantidadIntegrantes } });
     } catch (error) {
       console.error('Error al enviar el formulario: ', error);

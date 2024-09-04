@@ -1,0 +1,32 @@
+.resumen-container {
+    margin: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .resumen-tabla {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .resumen-tabla th, .resumen-tabla td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .resumen-tabla th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  
+  .resumen-tabla td ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+  }
+  
