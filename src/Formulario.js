@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db, collection, addDoc, query, getDocs, onSnapshot } from './firebaseConfig';
+import { db, collection, addDoc, query, getDocs, onSnapshot } from './firebaseConfig';  // Asegúrate de importar onSnapshot
 import { useNavigate } from 'react-router-dom';
 import './Formulario.css';
 
@@ -7,6 +7,7 @@ const Formulario = () => {
   const [nombre, setNombre] = useState('');
   const [matricula, setMatricula] = useState('');
   const [carrera, setCarrera] = useState('');
+  const [materia, setMateria] = useState('');
   const [profesor, setProfesor] = useState('');
   const [materiales, setMateriales] = useState([]);
   const [materialSeleccionado, setMaterialSeleccionado] = useState([]);
@@ -15,10 +16,10 @@ const Formulario = () => {
   const [areas, setAreas] = useState([]);
   const [cantidadIntegrantes, setCantidadIntegrantes] = useState('');
   const [profesores, setProfesores] = useState([]);
+  const [materias, setMaterias] = useState([]);
 
   const navigate = useNavigate();
 
-  // Cargar materiales
   useEffect(() => {
     const fetchMateriales = async () => {
       try {
@@ -35,7 +36,6 @@ const Formulario = () => {
     fetchMateriales();
   }, []);
 
-  // Cargar profesores
   useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, 'profesores'), (snapshot) => {
       const profesorData = snapshot.docs.map(doc => ({
@@ -48,7 +48,6 @@ const Formulario = () => {
     return () => unsubscribe(); // Detener la escucha cuando el componente se desmonte
   }, []);
 
-  // Cargar áreas
   useEffect(() => {
     const fetchAreas = async () => {
       try {
@@ -65,13 +64,34 @@ const Formulario = () => {
     fetchAreas();
   }, []);
 
+  useEffect(() => {
+    const fetchMaterias = async () => {
+      try {
+        const materiasRef = collection(db, 'materias');
+        const q = query(materiasRef);
+        const querySnapshot = await getDocs(q);
+        const materiaData = querySnapshot.docs.map(doc => ({
+          nombre: doc.data().nombre,
+          carrera: doc.data().carrera
+        }));
+        setMaterias(materiaData);
+      } catch (error) {
+        console.error('Error al cargar las materias: ', error);
+      }
+    };
+
+    fetchMaterias();
+  }, []);
+
   const handleCarreraChange = (e) => {
     const selectedCarrera = e.target.value;
     setCarrera(selectedCarrera);
     setProfesor('');
+    setMateria('');
   };
 
   const profesoresFiltrados = profesores.filter(prof => prof.carrera === carrera);
+  const materiasFiltradas = materias.filter(mat => mat.carrera === carrera);
 
   const handleMaterialChange = (id, value) => {
     setBuscadores(buscadores.map(busqueda =>
@@ -86,7 +106,7 @@ const Formulario = () => {
   };
 
   const handleMaterialSeleccionado = (id, value) => {
-    if (value && !materialSeleccionado.includes(value)) {
+    if (value) {
       setMaterialSeleccionado(prev => [...prev, value]);
       handleMaterialChange(id, value);
       handleAgregarCampo();
@@ -118,17 +138,22 @@ const Formulario = () => {
     e.preventDefault();
     try {
       const siguienteID = await obtenerSiguienteID();
+      const fechaHora = new Date(); // Obtiene la fecha y hora actuales
+
       await addDoc(collection(db, 'solicitudes'), {
         ID_solicitud: siguienteID,
         nombre,
         matricula,
         carrera,
+        materia,
         profesor,
         materiales: materialSeleccionado,
         area,
-        cantidadIntegrantes
+        cantidadIntegrantes,
+        fechaHora // Registra la fecha y hora en Firestore
       });
-      navigate('/resumen', { state: { nombre, matricula, carrera, profesor, materiales: materialSeleccionado, area, cantidadIntegrantes } });
+
+      navigate('/resumen', { state: { nombre, matricula, carrera, materia, profesor, materiales: materialSeleccionado, area, cantidadIntegrantes, fechaHora } });
     } catch (error) {
       console.error('Error al enviar el formulario: ', error);
     }
@@ -146,7 +171,19 @@ const Formulario = () => {
       />
 
       <label>Matrícula:</label>
-      <input type="text" value={matricula} onChange={(e) => setMatricula(e.target.value)} required />
+      <input
+        type="text"
+        pattern="\d*"
+        inputMode="numeric"
+        value={matricula}
+        onChange={(e) => setMatricula(e.target.value)}
+        onKeyPress={(e) => {
+          if (!/[0-9]/.test(e.key)) {
+            e.preventDefault();
+          }
+        }}
+        required
+      />
 
       <label>Carrera:</label>
       <select value={carrera} onChange={handleCarreraChange} required>
@@ -154,6 +191,16 @@ const Formulario = () => {
         <option value="Industrial">Industrial</option>
         <option value="Mecánica">Mecánica</option>
         <option value="Mecatrónica">Mecatrónica</option>
+      </select>
+
+      <label>Materia:</label>
+      <select value={materia} onChange={(e) => setMateria(e.target.value)} required>
+        <option value="">Selecciona una materia</option>
+        {materiasFiltradas.map((mat) => (
+          <option key={mat.nombre} value={mat.nombre}>
+            {mat.nombre}
+          </option>
+        ))}
       </select>
 
       <label>Profesor:</label>
@@ -205,9 +252,12 @@ const Formulario = () => {
       <label>Cantidad de Integrantes:</label>
       <input
         type="number"
+        min="1"
         value={cantidadIntegrantes}
         onChange={(e) => setCantidadIntegrantes(e.target.value)}
         required
+        inputMode="numeric"
+        pattern="[0-9]*"
       />
 
       <button type="submit">Enviar</button>
