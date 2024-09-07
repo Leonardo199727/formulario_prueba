@@ -138,7 +138,7 @@ const Formulario = () => {
     e.preventDefault();
     try {
       const siguienteID = await obtenerSiguienteID();
-      const fechaHora = new Date(); // Obtiene la fecha y hora actuales
+      const fecha = new Date(); // Obtiene la fecha y hora actuales
 
       await addDoc(collection(db, 'solicitudes'), {
         ID_solicitud: siguienteID,
@@ -150,10 +150,10 @@ const Formulario = () => {
         materiales: materialSeleccionado,
         area,
         cantidadIntegrantes,
-        fechaHora // Registra la fecha y hora en Firestore
+        fecha // Registra la fecha y hora en Firestore
       });
 
-      navigate('/resumen', { state: { nombre, matricula, carrera, materia, profesor, materiales: materialSeleccionado, area, cantidadIntegrantes, fechaHora } });
+      navigate('/resumen', { state: { nombre, matricula, carrera, materia, profesor, materiales: materialSeleccionado, area, cantidadIntegrantes,fecha } });
     } catch (error) {
       console.error('Error al enviar el formulario: ', error);
     }
